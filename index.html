@@ -287,9 +287,9 @@
                                     <div class="text-xl font-black tracking-wide">HKG</div>
                                 </div>
                                 <div class="flex-1 px-4 text-center">
-                                    <i class="fas fa-plane text-2xl text-white/80 rotate-45"></i>
+                                    <i class="fas fa-plane text-2xl text-white/80 rotate-0"></i>
                                     <div class="flight-line w-full my-1"></div>
-                                    <div class="text-[10px] text-blue-200 font-mono">{{ item.location.split(' ')[1] || 'HB320' }}</div>
+                                    <div class="text-[10px] text-blue-200 font-mono">{{ item.location.split(' ')[1] || 'CX520' }}</div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-xs text-blue-200 font-bold mb-0.5">TO</div>
@@ -303,36 +303,42 @@
                             </div>
                         </div>
 
-                        <!-- Standard Card -->
-                        <div v-else class="relative card-bg border border-slate-100/50 rounded-3xl p-4 shadow-sm flex gap-4 group">
+                        <!-- Standard Card (一般行程卡片) -->
+                        <div v-else class="relative liquid-glass rounded-3xl p-4 flex gap-4 group transition-transform active:scale-[0.98]">
+                            <!-- 左側時間與圖標 -->
                             <div class="flex flex-col items-center pt-1 min-w-[44px]">
-                                <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-white text-lg shadow-md mb-2 transition-transform group-hover:rotate-6" :class="getCategoryColor(item.category)">
+                                <!-- 圖標背景也稍微調整透明度，讓它融入玻璃感 -->
+                                <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-white text-lg shadow-inner mb-2 transition-transform group-hover:rotate-6 backdrop-blur-md" 
+                                     :class="getCategoryColor(item.category)" style="background-opacity: 0.8;">
                                     <i :class="getCategoryIcon(item.category)"></i>
                                 </div>
-                                <span class="text-sm font-bold text-slate-500 font-mono tracking-tighter">{{ item.time }}</span>
+                                <span class="text-sm font-bold text-slate-600 font-mono tracking-tighter mix-blend-multiply">{{ item.time }}</span>
                             </div>
                             
+                            <!-- 右側內容 -->
                             <div class="flex-1 min-w-0">
                                 <div class="flex justify-between items-start">
-                                    <h3 class="font-bold text-slate-800 text-lg truncate">{{ item.location }}</h3>
-                                    <button @click.stop="openModal('schedule', item)" class="text-slate-400 hover:text-jp-blue px-2">
+                                    <h3 class="font-bold text-slate-800 text-lg truncate drop-shadow-sm">{{ item.location }}</h3>
+                                    <button @click.stop="openModal('schedule', item)" class="text-slate-400 hover:text-jp-blue px-2 transition-colors">
                                         <i class="fas fa-pen text-sm"></i>
                                     </button>
                                 </div>
                                 
                                 <div class="flex items-center mt-1 mb-2">
+                                    <!-- 導航按鈕也加上一點透明感 -->
                                     <a :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.location + ' ' + item.address)" target="_blank"
-                                       class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-100 transition flex items-center gap-1 font-bold">
+                                       class="text-[10px] bg-blue-50/80 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-100 transition flex items-center gap-1 font-bold backdrop-blur-sm">
                                         <i class="fas fa-location-arrow"></i> 導航
                                     </a>
                                     <span class="text-slate-500 text-xs ml-2 truncate font-medium">{{ item.address }}</span>
                                 </div>
 
-                                <div v-if="item.note" class="bg-slate-50/80 p-2.5 rounded-xl text-xs text-slate-600 leading-relaxed border border-slate-100/50">
+                                <div v-if="item.note" class="bg-white/40 p-2.5 rounded-xl text-xs text-slate-700 leading-relaxed border border-white/30 backdrop-blur-sm">
                                     {{ item.note }}
                                 </div>
                             </div>
                         </div>
+
 
                     </div>
                 </div>
@@ -597,7 +603,7 @@
         setup() {
             const currentTab = ref('schedule');
             const selectedDate = ref('todo');
-            const exchangeRate = ref(0.052);
+            const exchangeRate = ref(0.051);
             const showModal = ref(false);
             const modalType = ref('');
             const mapObj = ref(null);
@@ -608,17 +614,17 @@
 
             // 日期
             const tripDates = ref([
-                { date: '2026-01-08', day: 'Day 1' },
-                { date: '2026-01-09', day: 'Day 2' },
-                { date: '2026-01-10', day: 'Day 3' },
-                { date: '2026-01-11', day: 'Day 4' },
+                { date: '2026-04-01', day: 'Day 1' },
+                { date: '2026-04-02', day: 'Day 2' },
+                { date: '2026-04-03', day: 'Day 3' },
+                { date: '2026-04-04', day: 'Day 4' },
                 { date: '2026-01-12', day: 'Day 5' },
             ]);
 
             // 行程資料
             const itineraryData = ref([
-                { id: 1, date: '2026-01-08', time: '09:05', category: 'flight', location: 'HB320 航班前往東京', address: 'HKG - NRT', note: '航廈 T1 / 登機門 22', lat: 35.7719, lng: 140.3929 },
-                { id: 2, date: '2026-01-08', time: '15:00', category: 'transport', location: 'NEX 成田特快', address: '成田空港駅', note: '前往新宿', lat: 35.7719, lng: 140.3929 },
+                { id: 1, date: '2026-04-01', time: '10:20', category: 'flight', location: 'CX520 航班前往東京', address: 'HKG - NRT', note: '航廈 T1 / 登機門 22', lat: 35.7719, lng: 140.3929 },
+                { id: 2, date: '2026-04-01', time: '15:00', category: 'transport', location: 'NEX 成田特快', address: '成田空港駅', note: '前往新宿', lat: 35.7719, lng: 140.3929 },
             ]);
             
             const expenses = ref([
@@ -886,5 +892,6 @@
 </script>
 </body>
 </html>
+
 
 
