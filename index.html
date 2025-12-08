@@ -614,12 +614,23 @@
 
             <!-- 購物表單 -->
             <div v-if="modalType === 'shop'" class="space-y-3">
-                <input v-model="newItem.name" type="text" placeholder="商品名稱" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100">
-                <input v-model="newItem.price" type="number" placeholder="預算 (JPY)" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100">
-                <label class="block w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-4 text-center cursor-pointer hover:bg-slate-100 transition">
+                <input v-model="newItem.name" type="text" placeholder="商品名稱" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100 font-bold">
+                <input v-model="newItem.price" type="number" placeholder="預算 (JPY)" class="w-full bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100 font-bold">
+                <div class="relative">
+                    <i class="fas fa-link absolute left-3 top-3.5 text-slate-400"></i>
+                    <input v-model="newItem.image" type="text" placeholder="貼上圖片連結 (URL)" class="w-full bg-slate-50 rounded-xl p-3 pl-9 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 border border-slate-100 text-sm">
+                </div>
+                <div class="text-center text-xs text-slate-400 font-bold -my-1">或</div>
+                  <label class="block w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-4 text-center cursor-pointer hover:bg-slate-100 transition relative overflow-hidden group">
                     <input type="file" accept="image/*" class="hidden" @change="handleImageUpload">
-                    <span v-if="!newItem.image" class="text-slate-400 text-sm font-bold"><i class="fas fa-camera mr-2"></i>上傳圖片</span>
-                    <img v-else :src="newItem.image" class="h-20 mx-auto rounded-lg object-contain">
+                                          <div v-if="newItem.image" class="relative z-10">
+                        <img :src="newItem.image" class="h-32 mx-auto rounded-lg object-contain shadow-sm bg-white" @error="newItem.image = null">
+                        <p class="text-[10px] text-slate-400 mt-2">點擊更換圖片</p>
+                    </div>
+                                          <div v-else class="py-2">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-slate-300 mb-2 group-hover:scale-110 transition-transform"></i>
+                        <p class="text-slate-400 text-xs font-bold">點擊上傳圖片</p>
+                    </div>
                 </label>
             </div>
 
@@ -945,6 +956,7 @@
 </script>
 </body>
 </html>
+
 
 
 
