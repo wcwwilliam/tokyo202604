@@ -114,34 +114,58 @@
             margin: 0 auto;
         }
 
-                /* ================= Liquid Glass 效果 ================= */
+        /* ================= 強化版 Liquid Glass 效果 ================= */
         .liquid-glass {
-            background: rgba(255, 255, 255, 0.60); /* 更清透的背景 */
-            backdrop-filter: blur(20px) saturate(180%); /* 高模糊 + 高飽和度 */
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.6); /* 半透明邊框 */
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); 
+            /* 1. 背景：改用漸層白，上半部稍微透明一點，下半部實一點，增加立體感 */
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.75) 0%,
+                rgba(255, 255, 255, 0.55) 100%
+            );
+            
+            /* 2. 濾鏡：加強模糊和飽和度，讓背後的顏色透出來更鮮豔 */
+            backdrop-filter: blur(24px) saturate(200%);
+            -webkit-backdrop-filter: blur(24px) saturate(200%);
+            
+            /* 3. 邊框：使用漸層邊框來模擬光線照射 */
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4); /* 下緣暗一點 */
+            border-right: 1px solid rgba(255, 255, 255, 0.4);
+            
+            /* 4. 陰影：增加多層陰影，讓它「浮」起來 */
+            box-shadow: 
+                0 8px 32px 0 rgba(31, 38, 135, 0.1), /* 主陰影 */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.3), /* 內發光邊緣 */
+                inset 0 10px 20px rgba(255, 255, 255, 0.3); /* 頂部高光 */
+            
             position: relative;
             overflow: hidden;
         }
 
-        /* 模擬流動光澤 (High-light) */
+        /* 模擬強烈流動光澤 (High-light) */
         .liquid-glass::before {
             content: '';
             position: absolute;
-            top: 0; left: -50%; width: 200%; height: 100%;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            /* 更銳利的光澤 */
             background: linear-gradient(
-                115deg, 
-                transparent 0%, 
-                transparent 40%, 
-                rgba(255, 255, 255, 0.4) 45%, /* 這一條是光澤 */
-                transparent 50%, 
-                transparent 100%
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.8) 50%,
+                rgba(255, 255, 255, 0) 100%
             );
-            transform: skewX(-20deg);
+            transform: skewX(-25deg);
             pointer-events: none;
-            opacity: 0; /* 預設隱藏，hover 或動畫時顯示 */
-            transition: opacity 0.5s;
+            /* 改為預設就有微弱光澤，不需要 hover 也看得到一點點 */
+            opacity: 0.3; 
+            transition: left 0.5s;
+        }
+
+        /* Hover 時光澤掃過去 */
+        .liquid-glass:hover::before {
+            opacity: 1;
+            left: 200%;
+            transition: left 0.7s ease-in-out; /* 讓光澤真的跑過去，而不是用 animation */
         }
 
         /* 讓光澤偶爾閃過，增加生命力 */
@@ -222,7 +246,7 @@
                 </div>
                 
                 <div class="space-y-2">
-                    <div v-for="item in todoList" :key="item.id" class="card-bg p-4 rounded-2xl shadow-sm border border-slate-100/50 flex items-center justify-between">
+                    <div v-for="item in todoList" :key="item.id" class="liquid-glass p-4 rounded-2xl shadow-sm border border-slate-100/50 flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <button @click="toggleTodo(item)" 
                                 class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all"
@@ -291,7 +315,7 @@
                                 </div>
                                 <div class="text-right">
                                     <div class="text-xs text-blue-200 font-bold mb-0.5">TO</div>
-                                    <div class="text-xl font-black tracking-wide">TYO</div>
+                                    <div class="text-xl font-black tracking-wide">NRT</div>
                                 </div>
                             </div>
                             
@@ -421,7 +445,7 @@
                     </div>
                     
                     <div class="space-y-3 pb-4">
-                        <div v-for="exp in filteredExpenses" :key="exp.id" class="flex justify-between items-center card-bg p-4 rounded-2xl shadow-sm border border-slate-100/50">
+                        <div v-for="exp in filteredExpenses" :key="exp.id" class="flex justify-between items-center liquid-glass p-4 rounded-2xl shadow-sm border border-slate-100/50">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm"
                                      :class="{
@@ -466,7 +490,7 @@
 
                 <div class="grid grid-cols-2 gap-4 pb-4">
                     <div v-for="item in shoppingList" :key="item.id" 
-                         class="card-bg p-3 rounded-2xl shadow-sm border border-slate-100/50 flex flex-col justify-between relative overflow-hidden transition-all group"
+                         class="liquid-glass p-3 rounded-2xl shadow-sm border border-slate-100/50 flex flex-col justify-between relative overflow-hidden transition-all group"
                          :class="{'opacity-60 bg-slate-50 grayscale': item.bought}">
                         
                         <div v-if="item.image" class="w-full h-28 mb-2 overflow-hidden rounded-xl bg-slate-100 border border-slate-100">
@@ -503,7 +527,7 @@
                 </div>
 
                 <div class="space-y-3 pb-4">
-                    <div v-for="info in infoList" :key="info.id" class="card-bg p-5 rounded-2xl shadow-sm border border-slate-100/50">
+                    <div v-for="info in infoList" :key="info.id" class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50">
                         <div class="flex justify-between items-start mb-2">
                             <h3 class="font-bold text-slate-800 text-lg border-l-4 border-purple-300 pl-3">{{ info.title }}</h3>
                             <div class="flex gap-2">
@@ -641,7 +665,7 @@
                 { date: '2026-04-02', day: 'Day 2' },
                 { date: '2026-04-03', day: 'Day 3' },
                 { date: '2026-04-04', day: 'Day 4' },
-                { date: '2026-01-12', day: 'Day 5' },
+                { date: '2026-04-05', day: 'Day 5' },
             ]);
 
             // 行程資料
@@ -651,8 +675,8 @@
             ]);
             
             const expenses = ref([
-                { id: 1, date: '01-08', item: 'NEX 車票', amount: 4000, paymentMethod: 'card' },
-                { id: 2, date: '01-08', item: '午餐', amount: 1500, paymentMethod: 'cash' },
+                { id: 1, date: '04-01', item: 'NEX 車票', amount: 4000, paymentMethod: 'card' },
+                { id: 2, date: '04-01', item: '午餐', amount: 1500, paymentMethod: 'cash' },
             ]);
             const shoppingList = ref([]);
             const todoList = ref([{ id: 1, text: '購買旅遊保險', done: false }]);
@@ -921,6 +945,7 @@
 </script>
 </body>
 </html>
+
 
 
 
