@@ -547,10 +547,10 @@
 
     createApp({
         setup() {
-            // ================= 1. 變數宣告區 (順序很重要) =================
+            // ================= 1. 變數宣告區 =================
             const currentTab = ref('schedule');
             const selectedDate = ref('todo');
-            const exchangeRate = ref(0.052); // 預設匯率
+            const exchangeRate = ref(0.052);
             const showModal = ref(false);
             const modalType = ref('');
             const mapObj = ref(null);
@@ -560,8 +560,8 @@
             const expenseFilter = ref('all'); 
             const sortableList = ref(null);
             let sortableInstance = null;
+            let routingControl = null; // 路線規劃控制器
 
-            // 資料容器
             const tripDates = ref([
                 { date: '2026-04-01', day: 'Day 1' },
                 { date: '2026-04-02', day: 'Day 2' },
@@ -570,27 +570,22 @@
                 { date: '2026-04-05', day: 'Day 5' },
             ]);
 
-            // 行程資料
-            const itineraryData = ref([
-                { id: 1, date: '2026-01-08', time: '09:05', category: 'flight', location: 'HB320 航班前往東京', address: 'HKG - NRT', note: '航廈 T1 / 登機門 22', lat: 35.7719, lng: 140.3929 },
-                { id: 2, date: '2026-01-08', time: '15:00', category: 'transport', location: 'NEX 成田特快', address: '成田空港駅', note: '前往新宿', lat: 35.7719, lng: 140.3929 },
-            ]);
-
-            // 重要：這些變數必須先宣告，後面的 onMounted 才能用
             const itineraryData = ref([]);
             const expenses = ref([]);
             const shoppingList = ref([]); 
+            
+            // ★★★ 修正了這裡的逗號錯誤 ★★★
             const todoList = ref([
                 { id: 1, text: '購買旅遊保險', done: false },
                 { id: 2, text: '訂機票', done: false },
                 { id: 3, text: '訂酒店', done: false }
             ]);
+            
             const infoList = ref([]);
 
             // ================= 2. Computed 計算屬性 =================
             const dailyItinerary = computed(() => itineraryData.value.filter(item => item.date === selectedDate.value));
             
-            // 記帳計算
             const totalExpenseJPY = computed(() => expenses.value.reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0));
             const totalExpenseHKD = computed(() => Math.round(totalExpenseJPY.value * exchangeRate.value));
             
@@ -609,16 +604,6 @@
                 if(selectedDate.value === 'todo') return { temp: '-', icon: '', desc: '' };
                 const month = parseInt(selectedDate.value.split('-')[1]);
                 let temp = 20; let icon = 'fas fa-sun'; let desc = '晴朗'; let feelDiff = -2;
-                if (month === 12 || month <= 2) { 
-                    temp = Math.floor(Math.random() * 8) + 2; 
-                    icon = 'fas fa-snowflake'; desc = '寒冷'; feelDiff = -3;
-                } else if (month >= 6 && month <= 9) { 
-                    temp = Math.floor(Math.random() * 10) + 25; 
-                    icon = 'fas fa-sun'; desc = '炎熱'; feelDiff = 3;
-                } else { 
-                    temp = Math.floor(Math.random() * 10) + 15; 
-                    icon = 'fas fa-cloud-sun'; desc = '舒適';
-                }
                 return { temp, icon, desc, feel: temp + feelDiff };
             });
 
@@ -641,7 +626,9 @@
 
             const selectDate = (date) => {
                 selectedDate.value = date;
-                if (currentTab.value === 'map') updateMapMarkers();
+                if (currentTab.value === 'map') {
+                    nextTick(() => updateMapMarkers()); // 確保切換日期時地圖更新
+                }
                 if (currentTab.value === 'schedule' && date !== 'todo') initSortable();
             };
 
@@ -663,7 +650,7 @@
                         if (sortableInstance) sortableInstance.destroy();
                         sortableInstance = new Sortable(sortableList.value, {
                             animation: 150, delay: 200, delayOnTouchOnly: true, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag',
-                            onEnd: (evt) => { /* 排序邏輯簡化版 */ }
+                            onEnd: () => { /* 排序邏輯簡化 */ }
                         });
                     }
                 });
@@ -697,7 +684,8 @@
                         const index = itineraryData.value.findIndex(i => i.id === newItem.value.id);
                         if (index !== -1) itineraryData.value[index] = newItem.value;
                     } else {
-                        itineraryData.value.push({ ...newItem.value, id: Date.now(), date: selectedDate.value, lat: 35.6895, lng: 139.6917 });
+                        // 這裡預設一個經緯度，避免 Leaflet 報錯
+                        itineraryData.value.push({ ...newItem.value, id: Date.now(), date: selectedDate.value, lat: 35.6812, lng: 139.7671 });
                     }
                 } 
                 else if (modalType.value === 'money') expenses.value.unshift({ ...newItem.value, id: Date.now() });
@@ -716,6 +704,7 @@
                 if (type === 'expense') expenses.value = expenses.value.filter(i => i.id !== id);
                 if (type === 'shop') shoppingList.value = shoppingList.value.filter(i => i.id !== id);
                 if (type === 'info') infoList.value = infoList.value.filter(i => i.id !== id);
+                if (type === 'schedule') itineraryData.value = itineraryData.value.filter(i => i.id !== id); // 補上行程刪除
                 saveToLocalStorage();
             };
             
@@ -734,120 +723,10 @@
                     itineraryData.value = data.itinerary || [];
                     expenses.value = data.expenses || [];
                     shoppingList.value = data.shop || [];
-                    todoList.value = data.todo || [];
-                    infoList.value = data.info || [];
-                }
-            };
 
-                        // 用於儲存當前的路線控制項，以便切換日期時清除舊路線
-            let routingControl = null;
-
-            const initMap = () => {
-                // 如果地圖已經存在，就不重新初始化
-                if (mapObj.value) return;
-
-                // 1. 初始化地圖
-                mapObj.value = L.map('map').setView([35.6812, 139.7671], 13);
-                
-                // 2. 使用漂亮的 CartoDB 底圖
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    attribution: '© OpenStreetMap © CARTO',
-                    maxZoom: 19
-                }).addTo(mapObj.value);
-
-                // 3. 修正 Leaflet 預設圖標路徑問題 (避免圖標破圖)
-                delete L.Icon.Default.prototype._getIconUrl;
-                L.Icon.Default.mergeOptions({
-                    iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-                    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-                    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-                });
-            };
-
-            const updateMapMarkers = () => {
-                if (!mapObj.value) return;
-
-                // 1. 清除舊的標記
-                markers.value.forEach(m => mapObj.value.removeLayer(m));
-                markers.value = [];
-
-                // 2. 清除舊的路線
-                if (routingControl) {
-                    mapObj.value.removeControl(routingControl);
-                    routingControl = null;
-                }
-
-                // 3. 收集當日所有有效的座標點
-                const waypoints = [];
-                const bounds = [];
-
-                dailyItinerary.value.forEach(item => {
-                    if (item.lat && item.lng) {
-                        const latLng = L.latLng(item.lat, item.lng);
-                        waypoints.push(latLng);
-                        bounds.push([item.lat, item.lng]);
-
-                        // 建立自定義標記 (保留原本漂亮的樣式)
-                        const iconHtml = `<div class="w-8 h-8 rounded-full ${getCategoryColor(item.category)} border-2 border-white flex items-center justify-center text-white shadow-lg text-xs"><i class="${getCategoryIcon(item.category)}"></i></div>`;
-                        const icon = L.divIcon({ className: 'custom-pin', html: iconHtml, iconSize: [32, 32], iconAnchor: [16, 32] });
-                        
-                        const m = L.marker([item.lat, item.lng], { icon })
-                            .addTo(mapObj.value)
-                            .bindPopup(`<b class="text-sm">${item.location}</b><br><span class="text-xs text-slate-500">${item.time}</span>`);
-                        markers.value.push(m);
-                    }
-                });
-
-                // 4. 如果有 2 個以上的點，自動畫路線
-                if (waypoints.length >= 2) {
-                    routingControl = L.Routing.control({
-                        waypoints: waypoints,
-                        routeWhileDragging: false,
-                        show: false, // 不顯示文字導航列表 (讓畫面更乾淨)
-                        addWaypoints: false, // 禁止手動拖曳新增點
-                        lineOptions: {
-                            styles: [{ color: '#6366f1', opacity: 0.7, weight: 5 }] // 漂亮的紫色路線
-                        },
-                        createMarker: function() { return null; } // 不重複建立預設標記 (我們已經有自定義標記了)
-                    }).addTo(mapObj.value);
-                } 
-                
-                // 5. 自動調整視野範圍
-                if (bounds.length) {
-                    mapObj.value.fitBounds(bounds, { padding: [50, 50] });
-                }
-            };
-
-            // ================= 4. 生命周期 Hook (放在最後) =================
-            onMounted(() => {
-                loadData();
-                if(selectedDate.value !== 'todo') initSortable();
-
-                // ★★★ 實時匯率代碼 (使用 .then 寫法避免 async 語法問題) ★★★
-                fetch('https://open.er-api.com/v6/latest/JPY')
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data && data.rates && data.rates.HKD) {
-                            exchangeRate.value = data.rates.HKD;
-                            console.log('匯率更新:', data.rates.HKD);
-                        }
-                    })
-                    .catch(err => console.log('匯率更新失敗，使用預設值'));
-            });
-
-            return {
-                currentTab, selectedDate, tripDates, dailyItinerary, expenses, shoppingList, todoList, infoList,
-                exchangeRate, totalExpenseHKD, totalExpenseJPY, totalCashJPY, totalCardJPY, totalCashHKD, totalCardHKD,
-                expenseFilter, filteredExpenses, weatherInfo,
-                showModal, modalType, modalTitle, newItem,
-                selectDate, switchTab, openModal, saveItem, deleteItem, getCategoryIcon, getCategoryColor,
-                toggleTodo, toggleBought, handleImageUpload, sortableList
-            };
-        }
-    }).mount('#app');
-</script>
 </body>
 </html>
+
 
 
 
