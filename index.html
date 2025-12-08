@@ -116,13 +116,11 @@
 
                 /* ================= Liquid Glass 效果 ================= */
         .liquid-glass {
-            background: rgba(255, 255, 255, 0.65); /* 更清透的背景 */
+            background: rgba(255, 255, 255, 0.60); /* 更清透的背景 */
             backdrop-filter: blur(20px) saturate(180%); /* 高模糊 + 高飽和度 */
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.4); /* 半透明邊框 */
-            box-shadow: 
-                0 8px 32px 0 rgba(31, 38, 135, 0.15), /* 柔和陰影 */
-                inset 0 0 0 1px rgba(255, 255, 255, 0.2); /* 內發光 */
+            border: 1px solid rgba(255, 255, 255, 0.6); /* 半透明邊框 */
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); 
             position: relative;
             overflow: hidden;
         }
@@ -163,7 +161,7 @@
             backdrop-filter: blur(16px) saturate(120%) !important;
             border: 1px solid rgba(255, 255, 255, 0.5) !important;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
-        }
+            }
     </style>
 </head>
 <body>
@@ -372,7 +370,6 @@
                         <h3 class="text-4xl font-black tracking-tight">$ {{ totalExpenseHKD || 0 }}</h3>
                         <p class="text-xs opacity-70 mt-1">日幣總計 ¥{{ totalExpenseJPY || 0 }}</p>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4 border-t border-white/20 pt-4 mt-2">
                         <div class="text-center border-r border-white/20">
                             <div class="flex items-center justify-center gap-1 text-green-200 mb-1">
@@ -382,13 +379,26 @@
                             <div class="font-black text-xl">$ {{ totalCashHKD || 0 }}</div>
                             <div class="text-[10px] opacity-70">¥{{ totalCashJPY || 0 }}</div>
                         </div>
-                        <div class="text-center">
+                        <div class="text-center p-2 rounded-xl bg-white/10 backdrop-blur-sm">
                             <div class="flex items-center justify-center gap-1 text-purple-200 mb-1">
-                                <i class="fas fa-credit-card text-xs"></i>
-                                <span class="text-[10px] font-bold">信用卡</span>
+                                <i class="fas fa-credit-card text-xs"></i> <span class="text-[10px] font-bold">信用卡</span>
                             </div>
-                            <div class="font-black text-xl">$ {{ totalCardHKD || 0 }}</div>
+                            <div class="font-black text-lg">$ {{ totalCardHKD || 0 }}</div>
                             <div class="text-[10px] opacity-70">¥{{ totalCardJPY || 0 }}</div>
+                        </div>
+                        <div class="text-center p-2 rounded-xl bg-white/10 backdrop-blur-sm">
+                            <div class="flex items-center justify-center gap-1 text-blue-200 mb-1">
+                                <i class="fab fa-alipay text-xs"></i> <span class="text-[10px] font-bold">AlipayHK</span>
+                            </div>
+                            <div class="font-black text-lg">$ {{ totalAlipayHKD || 0 }}</div>
+                            <div class="text-[10px] opacity-70">¥{{ totalAlipayJPY || 0 }}</div>
+                        </div>
+                      <div class="text-center p-2 rounded-xl bg-white/10 backdrop-blur-sm">
+                            <div class="flex items-center justify-center gap-1 text-red-200 mb-1">
+                                <i class="fas fa-qrcode text-xs"></i> <span class="text-[10px] font-bold">PayPay</span>
+                            </div>
+                            <div class="font-black text-lg">$ {{ totalPayPayHKD || 0 }}</div>
+                            <div class="text-[10px] opacity-70">¥{{ totalPayPayJPY || 0 }}</div>
                         </div>
                     </div>
                 </div>
@@ -400,19 +410,30 @@
                             <button @click="openModal('money')" class="text-[#5076a8] text-sm font-bold bg-white/90 px-3 py-1.5 rounded-full shadow-sm"><i class="fas fa-plus mr-1"></i>記一筆</button>
                         </div>
                         
-                        <div class="flex bg-white/50 backdrop-blur-md p-1 rounded-xl">
-                            <button @click="expenseFilter = 'all'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all" :class="expenseFilter === 'all' ? 'bg-white shadow text-[#5076a8]' : 'text-slate-500'">全部</button>
-                            <button @click="expenseFilter = 'cash'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all" :class="expenseFilter === 'cash' ? 'bg-white shadow text-green-600' : 'text-slate-500'">現金</button>
-                            <button @click="expenseFilter = 'card'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all" :class="expenseFilter === 'card' ? 'bg-white shadow text-purple-600' : 'text-slate-500'">信用卡</button>
+                            <div class="flex bg-white/50 backdrop-blur-md p-1 rounded-xl overflow-x-auto no-scrollbar gap-1">
+                            <button @click="expenseFilter = 'all'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'all' ? 'bg-white shadow text-[#5076a8]' : 'text-slate-500'">全部</button>
+                            <button @click="expenseFilter = 'cash'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'cash' ? 'bg-white shadow text-green-600' : 'text-slate-500'">現金</button>
+                            <button @click="expenseFilter = 'card'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'card' ? 'bg-white shadow text-purple-600' : 'text-slate-500'">信用卡</button>
+                            <button @click="expenseFilter = 'alipay'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'alipay' ? 'bg-white shadow text-blue-600' : 'text-slate-500'">AlipayHK</button>
+                            <button @click="expenseFilter = 'paypay'" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap" :class="expenseFilter === 'paypay' ? 'bg-white shadow text-red-600' : 'text-slate-500'">PayPay</button>
                         </div>
+
                     </div>
                     
                     <div class="space-y-3 pb-4">
                         <div v-for="exp in filteredExpenses" :key="exp.id" class="flex justify-between items-center card-bg p-4 rounded-2xl shadow-sm border border-slate-100/50">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm"
-                                     :class="exp.paymentMethod === 'card' ? 'bg-purple-100 text-purple-500' : 'bg-green-100 text-green-500'">
-                                    <i :class="exp.paymentMethod === 'card' ? 'fas fa-credit-card' : 'fas fa-money-bill-wave'"></i>
+                                     :class="{
+                                        'bg-green-100 text-green-500': exp.paymentMethod === 'cash',
+                                        'bg-purple-100 text-purple-500': exp.paymentMethod === 'card',
+                                        'bg-blue-100 text-blue-500': exp.paymentMethod === 'alipay',
+                                        'bg-red-100 text-red-500': exp.paymentMethod === 'paypay'
+                                     }">
+                                    <i v-if="exp.paymentMethod === 'cash'" class="fas fa-money-bill-wave"></i>
+                                    <i v-else-if="exp.paymentMethod === 'card'" class="fas fa-credit-card"></i>
+                                    <i v-else-if="exp.paymentMethod === 'alipay'" class="fab fa-alipay"></i>
+                                    <i v-else class="fas fa-qrcode"></i>
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-800">{{ exp.item }}</p>
@@ -557,6 +578,8 @@
                     <select v-model="newItem.paymentMethod" class="flex-1 bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 font-bold border border-slate-100">
                         <option value="cash">💵 現金</option>
                         <option value="card">💳 信用卡</option>
+                        <option value="alipay">🔵 AlipayHK</option>
+                        <option value="paypay">🔴 PayPay</option>
                     </select>
                     <input v-model="newItem.date" type="text" placeholder="MM-DD" class="w-24 bg-slate-50 rounded-xl p-3 text-slate-700 text-center border border-slate-100">
                 </div>
@@ -649,6 +672,12 @@
             const totalCardJPY = computed(() => expenses.value.filter(e => e.paymentMethod === 'card').reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0));
             const totalCardHKD = computed(() => Math.round(totalCardJPY.value * exchangeRate.value));
 
+            const totalAlipayJPY = computed(() => expenses.value.filter(e => e.paymentMethod === 'alipay').reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0));
+            const totalAlipayHKD = computed(() => Math.round(totalAlipayJPY.value * exchangeRate.value));
+
+            const totalPayPayJPY = computed(() => expenses.value.filter(e => e.paymentMethod === 'paypay').reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0));
+            const totalPayPayHKD = computed(() => Math.round(totalPayPayJPY.value * exchangeRate.value));
+            
             const filteredExpenses = computed(() => {
                 if (expenseFilter.value === 'all') return expenses.value;
                 return expenses.value.filter(e => e.paymentMethod === expenseFilter.value);
@@ -881,7 +910,7 @@
 
             return {
                 currentTab, selectedDate, tripDates, dailyItinerary, expenses, shoppingList, todoList, infoList,
-                exchangeRate, totalExpenseHKD, totalExpenseJPY, totalCashJPY, totalCardJPY, totalCashHKD, totalCardHKD,
+                exchangeRate, totalExpenseHKD, totalExpenseJPY, totalCashJPY, totalCardJPY, totalCashHKD, totalCardHKD, totalAlipayJPY, totalAlipayHKD, totalPayPayJPY, totalPayPayHKD,
                 expenseFilter, filteredExpenses, weatherInfo,
                 showModal, modalType, modalTitle, newItem,
                 selectDate, switchTab, openModal, saveItem, deleteItem, getCategoryIcon, getCategoryColor,
@@ -892,6 +921,7 @@
 </script>
 </body>
 </html>
+
 
 
 
