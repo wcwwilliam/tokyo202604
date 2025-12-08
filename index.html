@@ -807,21 +807,32 @@
                 if (bounds.length) mapObj.value.fitBounds(bounds, { padding: [50, 50] });
             };
 
-            onMounted(() => {
+            onMounted(async () => { // 加上 async 關鍵字
+                // 1. 載入資料 (原本的邏輯)
                 loadData();
+                
+                // 2. 初始化排序 (原本的邏輯)
                 if(selectedDate.value !== 'todo') initSortable();
+                
+                // 3. 【新增】實時抓取匯率
+                console.log('正在更新匯率...');
+                try {
+                    // 使用免費且無需 API Key 的服務
+                    const res = await fetch('https://open.er-api.com/v6/latest/JPY');
+                    const data = await res.json();
+                    
+                    if (data && data.rates && data.rates.HKD) {
+                        exchangeRate.value = data.rates.HKD;
+                        console.log('匯率已更新為:', exchangeRate.value);
+                    }
+                } catch (e) {
+                    console.warn('匯率更新失敗，將使用預設值 0.052', e);
+                    // 失敗時保持預設值，不影響 App 運作
+                }
             });
-
-            return {
-                currentTab, selectedDate, tripDates, dailyItinerary, expenses, shoppingList, todoList, infoList,
-                exchangeRate, totalExpenseHKD, totalExpenseJPY, totalCashJPY, totalCardJPY, totalCashHKD, totalCardHKD,
-                expenseFilter, filteredExpenses, weatherInfo,
-                showModal, modalType, modalTitle, newItem,
-                selectDate, switchTab, openModal, saveItem, deleteItem, getCategoryIcon, getCategoryColor,
-                toggleTodo, toggleBought, handleImageUpload, sortableList
-            };
         }
     }).mount('#app');
 </script>
 </body>
 </html>
+
