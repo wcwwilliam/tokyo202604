@@ -12,6 +12,8 @@
     <!-- Leaflet Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- SortableJS -->
@@ -578,8 +580,8 @@
             const expenses = ref([]);
             const shoppingList = ref([]); 
             const todoList = ref([
-                { id: 1, text: '購買旅遊保險', done: false }
-                { id: 2, text: '訂機票', done: false }
+                { id: 1, text: '購買旅遊保險', done: false },
+                { id: 2, text: '訂機票', done: false },
                 { id: 3, text: '訂酒店', done: false }
             ]);
             const infoList = ref([]);
@@ -736,16 +738,83 @@
                 }
             };
 
+                        // 用於儲存當前的路線控制項，以便切換日期時清除舊路線
+            let routingControl = null;
+
             const initMap = () => {
-                mapObj.value = L.map('map').setView([35.6812, 139.7671], 12);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap' }).addTo(mapObj.value);
+                // 如果地圖已經存在，就不重新初始化
+                if (mapObj.value) return;
+
+                // 1. 初始化地圖
+                mapObj.value = L.map('map').setView([35.6812, 139.7671], 13);
+                
+                // 2. 使用漂亮的 CartoDB 底圖
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap © CARTO',
+                    maxZoom: 19
+                }).addTo(mapObj.value);
+
+                // 3. 修正 Leaflet 預設圖標路徑問題 (避免圖標破圖)
+                delete L.Icon.Default.prototype._getIconUrl;
+                L.Icon.Default.mergeOptions({
+                    iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+                    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+                });
             };
 
             const updateMapMarkers = () => {
                 if (!mapObj.value) return;
+
+                // 1. 清除舊的標記
                 markers.value.forEach(m => mapObj.value.removeLayer(m));
                 markers.value = [];
-                // 簡化地圖標記邏輯...
+
+                // 2. 清除舊的路線
+                if (routingControl) {
+                    mapObj.value.removeControl(routingControl);
+                    routingControl = null;
+                }
+
+                // 3. 收集當日所有有效的座標點
+                const waypoints = [];
+                const bounds = [];
+
+                dailyItinerary.value.forEach(item => {
+                    if (item.lat && item.lng) {
+                        const latLng = L.latLng(item.lat, item.lng);
+                        waypoints.push(latLng);
+                        bounds.push([item.lat, item.lng]);
+
+                        // 建立自定義標記 (保留原本漂亮的樣式)
+                        const iconHtml = `<div class="w-8 h-8 rounded-full ${getCategoryColor(item.category)} border-2 border-white flex items-center justify-center text-white shadow-lg text-xs"><i class="${getCategoryIcon(item.category)}"></i></div>`;
+                        const icon = L.divIcon({ className: 'custom-pin', html: iconHtml, iconSize: [32, 32], iconAnchor: [16, 32] });
+                        
+                        const m = L.marker([item.lat, item.lng], { icon })
+                            .addTo(mapObj.value)
+                            .bindPopup(`<b class="text-sm">${item.location}</b><br><span class="text-xs text-slate-500">${item.time}</span>`);
+                        markers.value.push(m);
+                    }
+                });
+
+                // 4. 如果有 2 個以上的點，自動畫路線
+                if (waypoints.length >= 2) {
+                    routingControl = L.Routing.control({
+                        waypoints: waypoints,
+                        routeWhileDragging: false,
+                        show: false, // 不顯示文字導航列表 (讓畫面更乾淨)
+                        addWaypoints: false, // 禁止手動拖曳新增點
+                        lineOptions: {
+                            styles: [{ color: '#6366f1', opacity: 0.7, weight: 5 }] // 漂亮的紫色路線
+                        },
+                        createMarker: function() { return null; } // 不重複建立預設標記 (我們已經有自定義標記了)
+                    }).addTo(mapObj.value);
+                } 
+                
+                // 5. 自動調整視野範圍
+                if (bounds.length) {
+                    mapObj.value.fitBounds(bounds, { padding: [50, 50] });
+                }
             };
 
             // ================= 4. 生命周期 Hook (放在最後) =================
@@ -778,4 +847,5 @@
 </script>
 </body>
 </html>
+
 
