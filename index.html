@@ -113,6 +113,57 @@
             max-width: 420px;
             margin: 0 auto;
         }
+
+                /* ================= Liquid Glass 效果 ================= */
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.65); /* 更清透的背景 */
+            backdrop-filter: blur(20px) saturate(180%); /* 高模糊 + 高飽和度 */
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.4); /* 半透明邊框 */
+            box-shadow: 
+                0 8px 32px 0 rgba(31, 38, 135, 0.15), /* 柔和陰影 */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.2); /* 內發光 */
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 模擬流動光澤 (High-light) */
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -50%; width: 200%; height: 100%;
+            background: linear-gradient(
+                115deg, 
+                transparent 0%, 
+                transparent 40%, 
+                rgba(255, 255, 255, 0.4) 45%, /* 這一條是光澤 */
+                transparent 50%, 
+                transparent 100%
+            );
+            transform: skewX(-20deg);
+            pointer-events: none;
+            opacity: 0; /* 預設隱藏，hover 或動畫時顯示 */
+            transition: opacity 0.5s;
+        }
+
+        /* 讓光澤偶爾閃過，增加生命力 */
+        .liquid-glass:hover::before {
+            opacity: 1;
+            animation: shine 1.5s ease-out;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) skewX(-20deg); }
+            100% { transform: translateX(100%) skewX(-20deg); }
+        }
+
+        /* 替換原本的 card-bg (如果不想要那麼強烈的光澤，可以直接用這個基礎版) */
+        .card-bg {
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(16px) saturate(120%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
+        }
     </style>
 </head>
 <body>
@@ -191,7 +242,7 @@
             <div v-if="currentTab === 'schedule' && selectedDate !== 'todo'" class="space-y-4 animate-fade-in">
                 
                 <!-- 天氣資訊 Widget -->
-                <div class="bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/40 flex items-center justify-between text-slate-700">
+                <div class="liquid-glass rounded-2xl p-4 shadow-sm border border-white/40 flex items-center justify-between text-slate-700">
                     <div class="flex items-center gap-3">
                         <div class="text-4xl text-sky-500 drop-shadow-sm">
                             <i :class="weatherInfo.icon"></i>
@@ -443,7 +494,7 @@
     </div>
 
     <!-- 底部導航欄 (移出 scroll-container, 確保絕對獨立置頂) -->
-    <div class="bottom-nav bg-white/90 backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-slate-200/50 rounded-full">
+    <div class="bottom-nav liquid-glass rounded-full backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-slate-200/50 rounded-full">
         <div class="flex justify-between items-center px-1">
             <button @click="switchTab('schedule')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'schedule' ? 'text-[#5076a8]' : 'text-slate-400'">
                 <i class="fas fa-route text-xl mb-0.5"></i>
@@ -835,4 +886,5 @@
 </script>
 </body>
 </html>
+
 
