@@ -236,9 +236,9 @@
                                     <div class="text-xl font-black tracking-wide">HKG</div>
                                 </div>
                                 <div class="flex-1 px-4 text-center">
-                                    <i class="fas fa-plane text-2xl text-white/80 rotate-0"></i>
+                                    <i class="fas fa-plane text-2xl text-white/80 rotate-45"></i>
                                     <div class="flight-line w-full my-1"></div>
-                                    <div class="text-[10px] text-blue-200 font-mono">{{ item.location.split(' ')[1] || 'CX520' }}</div>
+                                    <div class="text-[10px] text-blue-200 font-mono">{{ item.location.split(' ')[1] || 'HB320' }}</div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-xs text-blue-200 font-bold mb-0.5">TO</div>
@@ -330,11 +330,6 @@
                                 <i class="fas fa-credit-card text-xs"></i>
                                 <span class="text-[10px] font-bold">信用卡</span>
                             </div>
-                        <div class="text-center">
-                            <div class="flex items-center justify-center gap-1 text-purple-200 mb-1">
-                                <i class="fas fa-credit-card text-xs"></i>
-                                <span class="text-[10px] font-bold">AlipayHK</span>
-                            </div>
                             <div class="font-black text-xl">$ {{ totalCardHKD || 0 }}</div>
                             <div class="text-[10px] opacity-70">¥{{ totalCardJPY || 0 }}</div>
                         </div>
@@ -352,8 +347,6 @@
                             <button @click="expenseFilter = 'all'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all" :class="expenseFilter === 'all' ? 'bg-white shadow text-[#5076a8]' : 'text-slate-500'">全部</button>
                             <button @click="expenseFilter = 'cash'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all" :class="expenseFilter === 'cash' ? 'bg-white shadow text-green-600' : 'text-slate-500'">現金</button>
                             <button @click="expenseFilter = 'card'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all" :class="expenseFilter === 'card' ? 'bg-white shadow text-purple-600' : 'text-slate-500'">信用卡</button>
-                            <button @click="expenseFilter = 'alipay'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all" :class="expenseFilter === 'alipay' ? 'bg-white shadow text-purple-600' : 'text-slate-500'">AlipayHK</button>
-                            <button @click="expenseFilter = 'paypay'" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all" :class="expenseFilter === 'paypay' ? 'bg-white shadow text-purple-600' : 'text-slate-500'">PayPay</button>
                         </div>
                     </div>
                     
@@ -507,8 +500,6 @@
                     <select v-model="newItem.paymentMethod" class="flex-1 bg-slate-50 rounded-xl p-3 text-slate-700 outline-none focus:ring-2 focus:ring-blue-200 font-bold border border-slate-100">
                         <option value="cash">💵 現金</option>
                         <option value="card">💳 信用卡</option>
-                        <option value="alipay">AlipayHK</option>
-                        <option value="paypay">PayPay</option>
                     </select>
                     <input v-model="newItem.date" type="text" placeholder="MM-DD" class="w-24 bg-slate-50 rounded-xl p-3 text-slate-700 text-center border border-slate-100">
                 </div>
@@ -566,17 +557,17 @@
 
             // 日期
             const tripDates = ref([
-                { date: '2026-04-01', day: 'Day 1' },
-                { date: '2026-04-02', day: 'Day 2' },
-                { date: '2026-04-03', day: 'Day 3' },
-                { date: '2026-04-04', day: 'Day 4' },
-                { date: '2026-04-05', day: 'Day 5' },
+                { date: '2026-01-08', day: 'Day 1' },
+                { date: '2026-01-09', day: 'Day 2' },
+                { date: '2026-01-10', day: 'Day 3' },
+                { date: '2026-01-11', day: 'Day 4' },
+                { date: '2026-01-12', day: 'Day 5' },
             ]);
 
             // 行程資料
             const itineraryData = ref([
-                { id: 1, date: '2026-04-01', time: '09:05', category: 'flight', location: 'HB320 航班前往東京', address: 'HKG - NRT', note: '航廈 T1 / 登機門 22', lat: 35.7719, lng: 140.3929 },
-                { id: 2, date: '2026-04-02', time: '15:00', category: 'transport', location: 'NEX 成田特快', address: '成田空港駅', note: '前往新宿', lat: 35.7719, lng: 140.3929 },
+                { id: 1, date: '2026-01-08', time: '09:05', category: 'flight', location: 'HB320 航班前往東京', address: 'HKG - NRT', note: '航廈 T1 / 登機門 22', lat: 35.7719, lng: 140.3929 },
+                { id: 2, date: '2026-01-08', time: '15:00', category: 'transport', location: 'NEX 成田特快', address: '成田空港駅', note: '前往新宿', lat: 35.7719, lng: 140.3929 },
             ]);
             
             const expenses = ref([
