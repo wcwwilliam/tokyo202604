@@ -553,7 +553,6 @@
 
     createApp({
         setup() {
-            // 1. 先宣告所有狀態變數
             const currentTab = ref('schedule');
             const selectedDate = ref('todo');
             const exchangeRate = ref(0.052);
@@ -564,10 +563,8 @@
             const newItem = ref({});
             const isEditing = ref(false);
             const expenseFilter = ref('all'); 
-            const sortableList = ref(null);
-            let sortableInstance = null;
 
-            // 資料容器
+            // 日期
             const tripDates = ref([
                 { date: '2026-04-01', day: 'Day 1' },
                 { date: '2026-04-02', day: 'Day 2' },
@@ -575,16 +572,26 @@
                 { date: '2026-04-04', day: 'Day 4' },
                 { date: '2026-04-05', day: 'Day 5' },
             ]);
-            const itineraryData = ref([]);
-            const expenses = ref([]);
-            const shoppingList = ref([]); // 確保這裡有被宣告
+
+            // 行程資料
+            const itineraryData = ref([
+                { id: 1, date: '2026-04-01', time: '09:05', category: 'flight', location: 'HB320 航班前往東京', address: 'HKG - NRT', note: '航廈 T1 / 登機門 22', lat: 35.7719, lng: 140.3929 },
+                { id: 2, date: '2026-04-02', time: '15:00', category: 'transport', location: 'NEX 成田特快', address: '成田空港駅', note: '前往新宿', lat: 35.7719, lng: 140.3929 },
+            ]);
+            
+            const expenses = ref([
+                { id: 1, date: '01-08', item: 'NEX 車票', amount: 4000, paymentMethod: 'card' },
+                { id: 2, date: '01-08', item: '午餐', amount: 1500, paymentMethod: 'cash' },
+            ]);
+            const shoppingList = ref([]);
             const todoList = ref([{ id: 1, text: '購買旅遊保險', done: false }]);
             const infoList = ref([]);
+            let sortableInstance = null;
+            const sortableList = ref(null);
 
-            // 2. 定義計算屬性 (Computed)
             const dailyItinerary = computed(() => itineraryData.value.filter(item => item.date === selectedDate.value));
             
-            // 記帳計算
+            // 記帳計算 (新增 HKD 計算, 加入 || 0 防止 NaN)
             const totalExpenseJPY = computed(() => expenses.value.reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0));
             const totalExpenseHKD = computed(() => Math.round(totalExpenseJPY.value * exchangeRate.value));
             
@@ -599,8 +606,44 @@
                 return expenses.value.filter(e => e.paymentMethod === expenseFilter.value);
             });
 
-            // 天氣模擬 (省略...)
-            const weatherInfo = computed(() => { /* ...原本的天氣邏輯... */ return { temp: 20, icon: 'fas fa-sun', desc: '晴朗', feel: 18 }; });
+            // 天氣模擬
+            const weatherInfo = computed(() => {
+                if(selectedDate.value === 'todo') return { temp: '-', icon: '', desc: '' };
+                const month = parseInt(selectedDate.value.split('-')[1]);
+                let temp = 20;
+                let icon = 'fas fa-sun';
+                let desc = '晴朗';
+                let feelDiff = -2;
+
+                if (month === 12 || month <= 2) { 
+                    temp = Math.floor(Math.random() * 8) + 2; 
+                    const conditions = [
+                        { icon: 'fas fa-sun', desc: '晴時多雲' },
+                        { icon: 'fas fa-cloud', desc: '陰天' },
+                        { icon: 'fas fa-snowflake', desc: '小雪' }
+                    ];
+                    const c = conditions[Math.floor(Math.random() * conditions.length)];
+                    icon = c.icon;
+                    desc = c.desc;
+                    feelDiff = -3;
+                } else if (month >= 6 && month <= 9) { 
+                    temp = Math.floor(Math.random() * 10) + 25; 
+                    icon = 'fas fa-sun';
+                    desc = '炎熱';
+                    feelDiff = 3;
+                } else { 
+                    temp = Math.floor(Math.random() * 10) + 15; 
+                    icon = 'fas fa-cloud-sun';
+                    desc = '舒適';
+                }
+
+                return {
+                    temp,
+                    icon,
+                    desc,
+                    feel: temp + feelDiff
+                };
+            });
 
             const modalTitle = computed(() => {
                 if (isEditing.value) return '編輯項目';
@@ -608,9 +651,15 @@
                 return map[modalType.value];
             });
 
-            // 3. 定義方法 (Methods)
-            const getCategoryIcon = (cat) => { /* ... */ return 'fas fa-star'; };
-            const getCategoryColor = (cat) => { /* ... */ return 'bg-slate-400'; };
+            const getCategoryIcon = (cat) => {
+                const map = { sightseeing: 'fas fa-camera', food: 'fas fa-utensils', transport: 'fas fa-train', flight: 'fas fa-plane', shopping: 'fas fa-shopping-bag', other: 'fas fa-star' };
+                return map[cat] || 'fas fa-map-marker-alt';
+            };
+            
+            const getCategoryColor = (cat) => {
+                const map = { sightseeing: 'bg-pink-300', food: 'bg-orange-300', transport: 'bg-blue-400', flight: 'bg-sky-500', shopping: 'bg-yellow-400', other: 'bg-slate-400' };
+                return map[cat] || 'bg-slate-400';
+            };
 
             const selectDate = (date) => {
                 selectedDate.value = date;
@@ -630,8 +679,26 @@
                 if (tab === 'schedule' && selectedDate.value !== 'todo') initSortable();
             };
 
-            const initSortable = () => { /* ...原本的邏輯... */ };
-            
+            const initSortable = () => {
+                nextTick(() => {
+                    if (sortableList.value) {
+                        if (sortableInstance) sortableInstance.destroy();
+                        sortableInstance = new Sortable(sortableList.value, {
+                            animation: 150, delay: 100, delayOnTouchOnly: true,
+                            ghostClass: 'sortable-ghost', dragClass: 'sortable-drag',
+                            onEnd: (evt) => {
+                                const dayItems = [...dailyItinerary.value];
+                                const movedItem = dayItems.splice(evt.oldIndex, 1)[0];
+                                dayItems.splice(evt.newIndex, 0, movedItem);
+                                const otherItems = itineraryData.value.filter(i => i.date !== selectedDate.value);
+                                itineraryData.value = [...otherItems, ...dayItems];
+                                saveToLocalStorage();
+                            }
+                        });
+                    }
+                });
+            };
+
             const openModal = (type, item = null) => {
                 modalType.value = type;
                 if (item) {
@@ -645,49 +712,115 @@
                 showModal.value = true;
             };
 
-            const handleImageUpload = (event) => { /* ... */ };
-
-            const saveItem = () => {
-                // ... 原本的 saveItem 邏輯 ...
-                if (modalType.value === 'shop') {
-                     // 確保這裡 shoppingList 存在
-                     shoppingList.value.push({ ...newItem.value, id: Date.now(), bought: false });
+            const handleImageUpload = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    if (file.size > 800000) alert('圖片有點大，建議使用小一點的圖檔！');
+                    const reader = new FileReader();
+                    reader.onload = (e) => newItem.value.image = e.target.result;
+                    reader.readAsDataURL(file);
                 }
-                // ... 其他邏輯 ...
-                saveToLocalStorage();
-                showModal.value = false;
             };
 
-            const deleteItem = (type, id) => { /* ... */ };
-            const toggleTodo = (item) => { /* ... */ };
+            const saveItem = () => {
+                // Info
+                if (modalType.value === 'info') {
+                    if(isEditing.value) {
+                         const index = infoList.value.findIndex(i => i.id === newItem.value.id);
+                         if (index !== -1) infoList.value[index] = newItem.value;
+                    } else {
+                        infoList.value.push({ ...newItem.value, id: Date.now() });
+                    }
+                }
+                // Schedule
+                else if (modalType.value === 'schedule') {
+                    if (isEditing.value) {
+                        const index = itineraryData.value.findIndex(i => i.id === newItem.value.id);
+                        if (index !== -1) itineraryData.value[index] = newItem.value;
+                    } else {
+                        itineraryData.value.push({
+                            ...newItem.value, id: Date.now(), date: selectedDate.value,
+                            lat: 35.6895 + (Math.random() - 0.5) * 0.05, lng: 139.6917 + (Math.random() - 0.5) * 0.05
+                        });
+                    }
+                    if (currentTab.value === 'schedule') initSortable();
+                } 
+                // Money
+                else if (modalType.value === 'money') {
+                    if (newItem.value.amount) {
+                        expenses.value.push({ ...newItem.value, id: Date.now() });
+                    }
+                }
+                // Shop
+                else if (modalType.value === 'shop') shoppingList.value.push({ ...newItem.value, id: Date.now(), bought: false });
+                // ToDo
+                else if (modalType.value === 'todo') todoList.value.push({ ...newItem.value, id: Date.now(), done: false });
+                
+                saveToLocalStorage();
+                showModal.value = false;
+                if (currentTab.value === 'map') updateMapMarkers();
+            };
+
+            const deleteItem = (type, id) => {
+                if(!confirm('確定要刪除嗎？')) return;
+                if (type === 'schedule') itineraryData.value = itineraryData.value.filter(i => i.id !== id);
+                if (type === 'todo') todoList.value = todoList.value.filter(i => i.id !== id);
+                if (type === 'expense') expenses.value = expenses.value.filter(i => i.id !== id);
+                if (type === 'shop') shoppingList.value = shoppingList.value.filter(i => i.id !== id);
+                if (type === 'info') infoList.value = infoList.value.filter(i => i.id !== id);
+                saveToLocalStorage();
+            };
+
+            const toggleTodo = (item) => { item.done = !item.done; saveToLocalStorage(); };
             const toggleBought = (item) => { item.bought = !item.bought; saveToLocalStorage(); };
 
-            const saveToLocalStorage = () => { /* ... */ };
-            const loadData = () => { /* ... */ };
-            const initMap = () => { /* ... */ };
-            const updateMapMarkers = () => { /* ... */ };
-
-            // 4. 最後執行 onMounted (確保所有變數都已經初始化)
-            onMounted(async () => {
-                // 先讀取資料
-                loadData();
-                
-                // 如果是行程頁，初始化排序
-                if(selectedDate.value !== 'todo') initSortable();
-
-                // 抓取匯率
-                try {
-                    const res = await fetch('https://open.er-api.com/v6/latest/JPY');
-                    const data = await res.json();
-                    if (data.rates && data.rates.HKD) {
-                        exchangeRate.value = data.rates.HKD;
-                    }
-                } catch (e) {
-                    console.log('使用預設匯率');
+            const saveToLocalStorage = () => {
+                localStorage.setItem('tokyo_data_v10', JSON.stringify({
+                    itinerary: itineraryData.value, expenses: expenses.value,
+                    shop: shoppingList.value, todo: todoList.value, info: infoList.value
+                }));
+            };
+            
+            const loadData = () => {
+                const data = JSON.parse(localStorage.getItem('tokyo_data_v10'));
+                if (data) {
+                    itineraryData.value = data.itinerary || [];
+                    expenses.value = data.expenses || [];
+                    shoppingList.value = data.shop || [];
+                    todoList.value = data.todo || [];
+                    infoList.value = data.info || [];
                 }
+            };
+
+            const initMap = () => {
+                mapObj.value = L.map('map').setView([35.6895, 139.6917], 11);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap © CARTO', maxZoom: 19
+                }).addTo(mapObj.value);
+            };
+
+            const updateMapMarkers = () => {
+                if (!mapObj.value) return;
+                markers.value.forEach(m => mapObj.value.removeLayer(m));
+                markers.value = [];
+                const bounds = [];
+                dailyItinerary.value.forEach(item => {
+                    if (item.lat) {
+                        const iconHtml = `<div class="w-8 h-8 rounded-full ${getCategoryColor(item.category)} border-2 border-white flex items-center justify-center text-white shadow-lg"><i class="${getCategoryIcon(item.category)} text-xs"></i></div>`;
+                        const icon = L.divIcon({ className: 'custom-pin', html: iconHtml, iconSize: [32, 32], iconAnchor: [16, 32] });
+                        const m = L.marker([item.lat, item.lng], { icon }).addTo(mapObj.value).bindPopup(`<b>${item.location}</b><br>${item.time}`);
+                        markers.value.push(m);
+                        bounds.push([item.lat, item.lng]);
+                    }
+                });
+                if (bounds.length) mapObj.value.fitBounds(bounds, { padding: [50, 50] });
+            };
+
+            onMounted(() => {
+                loadData();
+                if(selectedDate.value !== 'todo') initSortable();
             });
 
-            // 5. Return 給模板使用
             return {
                 currentTab, selectedDate, tripDates, dailyItinerary, expenses, shoppingList, todoList, infoList,
                 exchangeRate, totalExpenseHKD, totalExpenseJPY, totalCashJPY, totalCardJPY, totalCashHKD, totalCardHKD,
@@ -701,6 +834,3 @@
 </script>
 </body>
 </html>
-
-
-
