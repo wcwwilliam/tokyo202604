@@ -236,7 +236,7 @@
                                     <div class="text-xl font-black tracking-wide">HKG</div>
                                 </div>
                                 <div class="flex-1 px-4 text-center">
-                                    <i class="fas fa-plane text-2xl text-white/80 rotate-45"></i>
+                                    <i class="fas fa-plane text-2xl text-white/80 rotate-0"></i>
                                     <div class="flight-line w-full my-1"></div>
                                     <div class="text-[10px] text-blue-200 font-mono">{{ item.location.split(' ')[1] || 'HB320' }}</div>
                                 </div>
@@ -566,12 +566,22 @@
                 { date: '2026-04-04', day: 'Day 4' },
                 { date: '2026-04-05', day: 'Day 5' },
             ]);
-            
+
+            // 行程資料
+            const itineraryData = ref([
+                { id: 1, date: '2026-01-08', time: '09:05', category: 'flight', location: 'HB320 航班前往東京', address: 'HKG - NRT', note: '航廈 T1 / 登機門 22', lat: 35.7719, lng: 140.3929 },
+                { id: 2, date: '2026-01-08', time: '15:00', category: 'transport', location: 'NEX 成田特快', address: '成田空港駅', note: '前往新宿', lat: 35.7719, lng: 140.3929 },
+            ]);
+
             // 重要：這些變數必須先宣告，後面的 onMounted 才能用
             const itineraryData = ref([]);
             const expenses = ref([]);
             const shoppingList = ref([]); 
-            const todoList = ref([{ id: 1, text: '購買旅遊保險', done: false }]);
+            const todoList = ref([
+                { id: 1, text: '購買旅遊保險', done: false }
+                { id: 2, text: '訂機票', done: false }
+                { id: 3, text: '訂酒店', done: false }
+            ]);
             const infoList = ref([]);
 
             // ================= 2. Computed 計算屬性 =================
@@ -768,3 +778,4 @@
 </script>
 </body>
 </html>
+
