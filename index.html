@@ -115,11 +115,12 @@
             max-width: 420px;
             margin: 0 auto;
         }
+        [v-cloak] { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="app">
+<div id="app" v-cloak>
     <!-- 背景層 -->
     <div class="app-bg"></div> 
     <!-- 獨立的毛玻璃層 (解決 position:fixed 失效問題) -->
@@ -847,5 +848,6 @@
 </script>
 </body>
 </html>
+
 
 
