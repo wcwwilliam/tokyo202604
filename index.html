@@ -555,7 +555,24 @@
         setup() {
             const currentTab = ref('schedule');
             const selectedDate = ref('todo');
-            const exchangeRate = ref(0.052);
+            const exchangeRate = ref(0.052); // 預設值
+
+onMounted(async () => {
+    // 你的其他初始化...
+    loadData();
+
+    // 加入這段抓取匯率
+    try {
+        const res = await fetch('https://open.er-api.com/v6/latest/JPY');
+        const data = await res.json();
+        if (data.rates && data.rates.HKD) {
+            exchangeRate.value = data.rates.HKD;
+        }
+    } catch (e) {
+        console.log('使用預設匯率');
+    }
+});
+
             const showModal = ref(false);
             const modalType = ref('');
             const mapObj = ref(null);
@@ -834,4 +851,5 @@
 </script>
 </body>
 </html>
+
 
