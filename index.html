@@ -213,23 +213,25 @@
                 </div>
             </div>
 
-            <!-- 日期滑動 -->
-            <div class="flex overflow-x-auto no-scrollbar px-4 space-x-3 pb-2 snap-x">
+            <div ref="dateContainer" class="flex overflow-x-auto no-scrollbar px-4 space-x-3 pb-2 snap-x scroll-smooth">
                 <div @click="selectDate('todo')"
+                    id="date-btn-todo"
                     class="snap-center flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer border-2"
-                    :class="selectedDate === 'todo' ? 'bg-orange-50 border-orange-200 text-orange-500 shadow-md' : 'bg-white/80 border-slate-200 text-slate-400'"
+                    :class="selectedDate === 'todo' ? 'bg-orange-50 border-orange-200 text-orange-500 shadow-md scale-105' : 'bg-white/80 border-slate-200 text-slate-400'"
                 >
                     <i class="fas fa-clipboard-list text-xl mb-1"></i>
                     <span class="text-[11px] font-bold">行前</span>
                 </div>
 
                 <div v-for="(day, index) in tripDates" :key="index" @click="selectDate(day.date)"
+                    :id="'date-btn-' + day.date"
                     class="snap-center flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer border-2"
-                    :class="selectedDate === day.date ? 'bg-jp-blue border-blue-300 text-white shadow-lg shadow-blue-200' : 'bg-white/80 border-slate-200 text-slate-400'"
+                    :class="selectedDate === day.date ? 'bg-jp-blue border-blue-300 text-white shadow-lg shadow-blue-200 scale-105' : 'bg-white/80 border-slate-200 text-slate-400'"
                 >
                     <span class="text-[11px] font-bold">{{ day.day }}</span>
                     <span class="text-xl font-black">{{ day.date.split('-')[2] }}</span>
                 </div>
+                <div class="w-2 flex-shrink-0"></div>
             </div>
         </div>
 
@@ -590,7 +592,7 @@
                 
                 <!-- 版本資訊 -->
                 <div class="text-center text-[10px] text-slate-400 font-bold mt-8">
-                    Tokyo eMenu v1.1 <br> Designed for William
+                    Tokyo eMenu v1.2 <br>
                 </div>
             </div>
 
@@ -1025,6 +1027,32 @@
                 URL.revokeObjectURL(url);
             };
 
+            // --- 自動捲動日期邏輯 ---
+            const dateContainer = ref(null);
+
+            const scrollToSelectedDate = () => {
+                Vue.nextTick(() => {
+                    const container = dateContainer.value;
+                    const targetId = selectedDate.value === 'todo' ? 'date-btn-todo' : 'date-btn-' + selectedDate.value;
+                    const targetEl = document.getElementById(targetId);
+
+                    if (container && targetEl) {
+                        // 計算置中位置：(目標左邊距 - 容器左邊距) - (容器寬度 / 2) + (目標寬度 / 2)
+                        const scrollLeft = targetEl.offsetLeft - container.offsetLeft - (container.clientWidth / 2) + (targetEl.clientWidth / 2);
+                        
+                        container.scrollTo({
+                            left: scrollLeft,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            };
+
+            // 監聽 selectedDate 變化，當日期改變時自動捲動
+            Vue.watch(selectedDate, () => {
+                scrollToSelectedDate();
+            });
+            
             // 匯入資料 (讀取 JSON)
             const importData = (event) => {
                 const file = event.target.files[0];
@@ -1061,9 +1089,10 @@
                 event.target.value = '';
             };
             
-        onMounted(() => {
-            loadData();
-            if(selectedDate.value !== 'todo') initSortable();
+            onMounted(() => {
+                loadData();
+                if(selectedDate.value !== 'todo') initSortable();
+                setTimeout(() => scrollToSelectedDate(), 500); 
 
              fetch('https://open.er-api.com/v6/latest/JPY')
                 .then(res => res.json()) 
@@ -1077,7 +1106,7 @@
             });
 
             return {
-                currentTab, selectedDate, tripDates, dailyItinerary, expenses, shoppingList, todoList, infoList,
+                dateContainer, currentTab, selectedDate, tripDates, dailyItinerary, expenses, shoppingList, todoList, infoList,
                 exchangeRate, totalExpenseHKD, totalExpenseJPY, totalCashJPY, totalCardJPY, totalCashHKD, totalCardHKD, totalAlipayJPY, totalAlipayHKD, totalPayPayJPY, totalPayPayHKD,
                 expenseFilter, filteredExpenses, weatherInfo,
                 showModal, modalType, modalTitle, newItem,
@@ -1091,6 +1120,7 @@
 </script>
 </body>
 </html>
+
 
 
 
