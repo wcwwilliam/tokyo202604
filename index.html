@@ -1060,14 +1060,13 @@
                 // 清空 input 讓同個檔案可以再選一次
                 event.target.value = '';
             };
-            });
             
             onMounted(() => {
                 loadData();
                 if(selectedDate.value !== 'todo') initSortable();
 
                  fetch('https://open.er-api.com/v6/latest/JPY')
-                    .then(res => res.json())
+                    .then(res => res.json())\
                     .then(data => {
                         if (data && data.rates && data.rates.HKD) {
                             exchangeRate.value = data.rates.HKD;
@@ -1075,6 +1074,7 @@
                         }
                     })
                     .catch(err => console.log('匯率更新失敗，使用預設值'));
+            });
 
             return {
                 currentTab, selectedDate, tripDates, dailyItinerary, expenses, shoppingList, todoList, infoList,
@@ -1086,11 +1086,12 @@
                 startDate, tripDuration,
                 exportData, importData
             };
-        }
+        } 
     }).mount('#app');
 </script>
 </body>
 </html>
+
 
 
 
