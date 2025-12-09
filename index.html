@@ -1005,21 +1005,7 @@
                 if (bounds.length) mapObj.value.fitBounds(bounds, { padding: [50, 50] });
             };
 
-            onMounted(() => {
-                loadData();
-                if(selectedDate.value !== 'todo') initSortable();
-
-                 fetch('https://open.er-api.com/v6/latest/JPY')
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data && data.rates && data.rates.HKD) {
-                            exchangeRate.value = data.rates.HKD;
-                            console.log('匯率更新:', data.rates.HKD);
-                        }
-                    })
-                    .catch(err => console.log('匯率更新失敗，使用預設值'));
-
-                            const exportData = () => {
+                                        const exportData = () => {
                 const data = {
                     version: '1.0',
                     exportDate: new Date().toISOString(),
@@ -1075,6 +1061,20 @@
                 event.target.value = '';
             };
             });
+            
+            onMounted(() => {
+                loadData();
+                if(selectedDate.value !== 'todo') initSortable();
+
+                 fetch('https://open.er-api.com/v6/latest/JPY')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.rates && data.rates.HKD) {
+                            exchangeRate.value = data.rates.HKD;
+                            console.log('匯率更新:', data.rates.HKD);
+                        }
+                    })
+                    .catch(err => console.log('匯率更新失敗，使用預設值'));
 
             return {
                 currentTab, selectedDate, tripDates, dailyItinerary, expenses, shoppingList, todoList, infoList,
@@ -1091,6 +1091,7 @@
 </script>
 </body>
 </html>
+
 
 
 
