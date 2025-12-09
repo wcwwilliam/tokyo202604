@@ -1061,13 +1061,13 @@
                 event.target.value = '';
             };
             
-            onMounted(() => {
-                loadData();
-                if(selectedDate.value !== 'todo') initSortable();
+        onMounted(() => {
+            loadData();
+            if(selectedDate.value !== 'todo') initSortable();
 
-                 fetch('https://open.er-api.com/v6/latest/JPY')
-                    .then(res => res.json())\
-                    .then(data => {
+             fetch('https://open.er-api.com/v6/latest/JPY')
+                .then(res => res.json()) 
+                .then(data => {
                         if (data && data.rates && data.rates.HKD) {
                             exchangeRate.value = data.rates.HKD;
                             console.log('匯率更新:', data.rates.HKD);
@@ -1091,6 +1091,7 @@
 </script>
 </body>
 </html>
+
 
 
 
