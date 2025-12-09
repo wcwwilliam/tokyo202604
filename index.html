@@ -540,13 +540,67 @@
                 </div>
             </div>
 
+                        <!-- 6. 設定 Tab -->
+            <div v-if="currentTab === 'settings'" class="space-y-6 pt-6 animate-fade-in">
+                <div class="px-2">
+                    <h2 class="text-2xl font-black text-slate-800 drop-shadow-sm bg-white/40 px-2 rounded-lg backdrop-blur-sm inline-block">行程設定</h2>
+                </div>
+
+                <!-- 1. 旅程日期設定 -->
+                <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
+                    <h3 class="font-bold text-slate-800 border-l-4 border-slate-500 pl-3">旅程時間</h3>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">出發日期</label>
+                        <input v-model="startDate" type="date" @change="saveToLocalStorage" class="w-full bg-white/60 rounded-xl p-3 text-slate-700 font-bold outline-none focus:ring-2 focus:ring-blue-200">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">旅遊天數 ({{ tripDuration }} 天)</label>
+                        <input v-model.number="tripDuration" type="range" min="1" max="10" step="1" @change="saveToLocalStorage" class="w-full accent-[#5076a8]">
+                        <div class="flex justify-between text-[10px] text-slate-400 font-bold px-1 mt-1">
+                            <span>1天</span>
+                            <span>5天</span>
+                            <span>10天</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50/50 p-3 rounded-xl text-xs text-slate-600">
+                        <i class="fas fa-info-circle mr-1 text-blue-400"></i>
+                        目前設定：{{ startDate }} 起，共 {{ tripDuration }} 天
+                    </div>
+                </div>
+
+                <!-- 2. 資料備份 -->
+                <div class="liquid-glass p-5 rounded-2xl shadow-sm border border-slate-100/50 space-y-4">
+                    <h3 class="font-bold text-slate-800 border-l-4 border-green-500 pl-3">資料備份</h3>
+                    <p class="text-xs text-slate-500 font-bold">建議定期匯出備份，以免更換手機或清除快取時資料遺失。</p>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <button @click="exportData" class="flex items-center justify-center gap-2 bg-[#5076a8] text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition">
+                            <i class="fas fa-file-export"></i> 匯出備份
+                        </button>
+                        
+                        <label class="flex items-center justify-center gap-2 bg-white text-slate-600 border-2 border-slate-200 py-3 rounded-xl font-bold cursor-pointer active:scale-95 transition hover:bg-slate-50">
+                            <i class="fas fa-file-import text-green-500"></i> 匯入還原
+                            <input type="file" accept=".json" class="hidden" @change="importData">
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- 版本資訊 -->
+                <div class="text-center text-[10px] text-slate-400 font-bold mt-8">
+                    Tokyo eMenu v1.1 <br> Designed for William
+                </div>
+            </div>
+
         </div>
 
     </div>
 
     <!-- 底部導航欄 (移出 scroll-container, 確保絕對獨立置頂) -->
     <div class="bottom-nav liquid-glass rounded-full backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-slate-200/50 rounded-full">
-        <div class="flex justify-between items-center px-1">
+         <div class="flex justify-between items-center px-1">
             <button @click="switchTab('schedule')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'schedule' ? 'text-[#5076a8]' : 'text-slate-400'">
                 <i class="fas fa-route text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">行程</span>
@@ -566,6 +620,10 @@
             <button @click="switchTab('info')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'info' ? 'text-purple-400' : 'text-slate-400'">
                 <i class="fas fa-info-circle text-xl mb-0.5"></i>
                 <span class="text-[10px] font-bold">資訊</span>
+            </button>
+                         <button @click="switchTab('settings')" class="flex-1 flex flex-col items-center py-3.5 transition-all active:scale-95" :class="currentTab === 'settings' ? 'text-slate-600' : 'text-slate-400'">
+                <i class="fas fa-cog text-xl mb-0.5"></i>
+                <span class="text-[10px] font-bold">設定</span>
             </button>
         </div>
     </div>
@@ -901,15 +959,20 @@
             const toggleBought = (item) => { item.bought = !item.bought; saveToLocalStorage(); };
 
             const saveToLocalStorage = () => {
-                localStorage.setItem('tokyo_data_v10', JSON.stringify({
+                localStorage.setItem('tokyo_data_v11', JSON.stringify({ // 建議版本號 +1 避免舊資料衝突
+                    settings: { startDate: startDate.value, duration: tripDuration.value }, // 新增這行
                     itinerary: itineraryData.value, expenses: expenses.value,
                     shop: shoppingList.value, todo: todoList.value, info: infoList.value
                 }));
             };
             
             const loadData = () => {
-                const data = JSON.parse(localStorage.getItem('tokyo_data_v10'));
+                const data = JSON.parse(localStorage.getItem('tokyo_data_v11')); // 對應版本號
                 if (data) {
+                    if (data.settings) { // 讀取設定
+                        startDate.value = data.settings.startDate;
+                        tripDuration.value = data.settings.duration;
+                    }
                     itineraryData.value = data.itinerary || [];
                     expenses.value = data.expenses || [];
                     shoppingList.value = data.shop || [];
@@ -1019,13 +1082,16 @@
                 expenseFilter, filteredExpenses, weatherInfo,
                 showModal, modalType, modalTitle, newItem,
                 selectDate, switchTab, openModal, saveItem, deleteItem, getCategoryIcon, getCategoryColor,
-                toggleTodo, toggleBought, handleImageUpload, sortableList
+                toggleTodo, toggleBought, handleImageUpload, sortableList,
+                startDate, tripDuration,
+                exportData, importData
             };
         }
     }).mount('#app');
 </script>
 </body>
 </html>
+
 
 
 
