@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>eMenu Tokyo Trip</title>
+    <title>Tokyo Trip eMenu</title>
     
     <!-- Vue.js 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -204,7 +204,7 @@
             <div class="px-6 mb-3 flex justify-between items-center">
                 <div>
                     <h1 class="text-xl font-black text-slate-800 tracking-widest flex items-center gap-2">
-                        eMenu Tokyo <i class="fas fa-mountain text-blue-400"></i>
+                        Tokyo eMenu <i class="fas fa-mountain text-blue-400"></i>
                     </h1>
                 </div>
                 <div class="text-right">
@@ -669,15 +669,29 @@
             const newItem = ref({});
             const isEditing = ref(false);
             const expenseFilter = ref('all'); 
-
+            // --- 設定頁面相關 ---
+            // 預設旅遊起始日 (可根據需求改成今天或特定日期)
+            const startDate = ref('2026-04-01');
+            const tripDuration = ref(5); // 預設 5 天
+            
             // 日期
-            const tripDates = ref([
-                { date: '2026-04-01', day: 'Day 1' },
-                { date: '2026-04-02', day: 'Day 2' },
-                { date: '2026-04-03', day: 'Day 3' },
-                { date: '2026-04-04', day: 'Day 4' },
-                { date: '2026-04-05', day: 'Day 5' },
-            ]);
+            const tripDates = computed(() => {
+                const dates = [];
+                const start = new Date(startDate.value);
+                // 防呆：如果日期無效，給一個預設值
+                if (isNaN(start.getTime())) return [];
+                
+                for (let i = 0; i < tripDuration.value; i++) {
+                    const d = new Date(start);
+                    d.setDate(start.getDate() + i);
+                    const dateStr = d.toISOString().split('T')[0];
+                    dates.push({
+                        date: dateStr,
+                        day: `Day ${i + 1}`
+                    });
+                }
+                return dates;
+            });
 
             // 行程資料
             const itineraryData = ref([
@@ -941,6 +955,62 @@
                         }
                     })
                     .catch(err => console.log('匯率更新失敗，使用預設值'));
+
+                            const exportData = () => {
+                const data = {
+                    version: '1.0',
+                    exportDate: new Date().toISOString(),
+                    settings: { startDate: startDate.value, duration: tripDuration.value }, // 記得備份設定
+                    itinerary: itineraryData.value,
+                    expenses: expenses.value,
+                    shop: shoppingList.value,
+                    todo: todoList.value,
+                    info: infoList.value
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tokyo_trip_backup_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            // 匯入資料 (讀取 JSON)
+            const importData = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (confirm('匯入將會覆蓋現有所有資料，確定要繼續嗎？')) {
+                            // 還原資料
+                            itineraryData.value = data.itinerary || [];
+                            expenses.value = data.expenses || [];
+                            shoppingList.value = data.shop || [];
+                            todoList.value = data.todo || [];
+                            infoList.value = data.info || [];
+                            
+                            // 還原設定 (如果有)
+                            if (data.settings) {
+                                startDate.value = data.settings.startDate || '2026-04-01';
+                                tripDuration.value = data.settings.duration || 5;
+                            }
+                            
+                            saveToLocalStorage();
+                            alert('資料匯入成功！');
+                            window.location.reload(); // 重新整理確保狀態更新
+                        }
+                    } catch (err) {
+                        alert('檔案格式錯誤，無法匯入！');
+                        console.error(err);
+                    }
+                };
+                reader.readAsText(file);
+                // 清空 input 讓同個檔案可以再選一次
+                event.target.value = '';
+            };
             });
 
             return {
@@ -956,6 +1026,7 @@
 </script>
 </body>
 </html>
+
 
 
 
